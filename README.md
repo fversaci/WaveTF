@@ -49,6 +49,16 @@ To generate the html documentation (accessible at location `docs/build/html/inde
 $ make -C docs/ html
 ```
 
+## Further details
+
+An article describing in detail WaveTF's implementation and
+performance has been presented at the [CADL
+workshop](https://ailb-web.ing.unimore.it/cadl2020/) at [ICPR
+2020](http://www.icpr2020.it/) and is available either via the
+[Springer website](https://doi.org/10.1007/978-3-030-68763-2_46) or
+the CRS4 publications repository [(direct link to
+PDF)](http://publications.crs4.it/pubdocs/2021/Ver21/wavetf.pdf).
+
 ## Usage
 
 WaveTF directly exposes a single class, which is a factory for Keras
