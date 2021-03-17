@@ -67,7 +67,7 @@ def wavelet_cnn(input_shape, ks=3, baselev=4, wavelet=True,
         cnn = pool_down(cnn, 2**(l+1))
         cnn = rep_conv(cnn, 2**(l+1))
         if (wavelet):
-    	    cnn = Concatenate(axis=3)([cnn, waves[l]])
+            cnn = Concatenate(axis=3)([cnn, waves[l]])
 
     # output
     cnn = Conv2D(2048, ks)(cnn)

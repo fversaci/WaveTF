@@ -72,14 +72,14 @@ class DaubWaveLayer1D(DirWaveLayer1D):
         else:
             s1 = self.daub_1(t1)
         ## s1: (b, c, 2*nx)
-        s1 = tf.reshape(s1, [self.bs*self.cn, -1, 1]) # out: (b*c, 2*nx', 1)
+        s1 = tf.reshape(s1, [self.bs, self.cn, -1, 1]) # out: (b, c, 2*nx', 1)
         # build kernels and apply to rows
         k1l = tf.reshape(daubechies_ker[:,0], (4, 1, 1))
         k1h = tf.reshape(daubechies_ker[:,1], (4, 1, 1))
         rl = tf.nn.conv1d(s1, k1l, stride=2, padding='VALID')
         rh = tf.nn.conv1d(s1, k1h, stride=2, padding='VALID')
-        r = tf.concat((rl, rh), axis=-1) # out: (b*c, nx, 2)
-        r = tf.reshape(r, [self.bs, self.cn, self.nx, 2]) # out: (b, c, nx, 2)
+        r = tf.concat((rl, rh), axis=-1) # out: (b, c, nx, 2)
+        # r = tf.reshape(r, [self.bs, self.cn, self.nx, 2]) # out: (b, c, nx, 2)
         r = tf.transpose(r, [0, 2, 3, 1]) # out: (b, nx, 2, c)
         r = tf.reshape(r, [self.bs, self.nx, 2*self.cn]) # out: (b, nx, 2*c)
         return r
@@ -134,13 +134,13 @@ class InvDaubWaveLayer1D(InvWaveLayer1D):
         #######################################
         ## transform core
         #######################################
-        t1 = tf.reshape(t1, [self.bs*self.cn, self.ox, 1]) # out: (b*c, ox, 1)
+        t1 = tf.reshape(t1, [self.bs, self.cn, self.ox, 1]) # out: (b, c, ox, 1)
         # apply kernel to rows
         k1l = tf.reshape(daubechies_ker[:,0], (4, 1, 1))
         k1h = tf.reshape(daubechies_ker[:,1], (4, 1, 1))
         rl = tf.nn.conv1d(t1, k1l, stride=2, padding='VALID')
         rh = tf.nn.conv1d(t1, k1h, stride=2, padding='VALID')
-        r1 = tf.concat((rl, rh), axis=-1) # out: (b*c, qx, 4)
+        r1 = tf.concat((rl, rh), axis=-1) # out: (b, c, qx, 4)
         r1 = tf.reshape(r1, [self.bs, self.cn, self.ox-2]) # out: (b, c, ox-2)
         #######################################
         ## merge core and borders
@@ -183,19 +183,19 @@ class DaubWaveLayer2D(DirWaveLayer2D):
     ########################################################################
     def daub_cols(self, t1) :
         # anti-symmetric-reflect padding, a.k.a. asym in matlab
-        col1_xa = 2.0 * t1[:,:,:,0:1]
-        col1_xb = 2.0 * t1[:,:,:,-1:]
-        col1_a = col1_xa - t1[:,:,:,1:2] # 2*x_0 - x_1
-        col1_b = col1_xb - t1[:,:,:,-2:-1] # 2*x_{n-1} - x_{n-2}
-        col1_c = col1_xb - t1[:,:,:,-3:-2] # 2*x_{n-1} - x_{n-3}
+        col1_xa = 2.0 * t1[... , 0:1]
+        col1_xb = 2.0 * t1[... , -1:]
+        col1_a = col1_xa - t1[... , 1:2] # 2*x_0 - x_1
+        col1_b = col1_xb - t1[... , -2:-1] # 2*x_{n-1} - x_{n-2}
+        col1_c = col1_xb - t1[... , -3:-2] # 2*x_{n-1} - x_{n-3}
         return [col1_a, col1_b, col1_c]
     def daub_0(self, t1) :
-        ## t1: (b, c, x, y) with (y % 4) == 0
+        ## t1: (... , z) with (z % 4) == 0
         col1_a, col1_b, _ = self.daub_cols(t1)
-        s1 = tf.concat([col1_a, t1, col1_b], axis=-1) # out: (b, c, x, 2*ny)
+        s1 = tf.concat([col1_a, t1, col1_b], axis=-1) # out: (..., 2*nz)
         return s1
     def daub_1(self, t1) :
-        ## t1: (b, c, x, y) with (y % 4) == 1
+        ## t1: (... , z) with (z % 4) == 1
         col1_a, col1_b, col1_c = self.daub_cols(t1)
         s1 = tf.concat([col1_a, t1, col1_b, col1_c], axis=-1)
         return s1
@@ -212,29 +212,30 @@ class DaubWaveLayer2D(DirWaveLayer2D):
         else:
             s1 = self.daub_1(t1)
         ## s1: (b, c, ox, 2*ny)
-        s1 = tf.reshape(s1, [self.bs*self.cn*self.ox, -1, 1])
-        ## s1: (b*c*ox, 2*ny', 1)
+        s1 = tf.reshape(s1, [self.bs, self.cn*self.ox, -1, 1])
+        ## s1: (b, c*ox, 2*ny', 1)
         # build kernels and apply to rows
         k1l = tf.reshape(daubechies_ker[:,0], (4, 1, 1))
         k1h = tf.reshape(daubechies_ker[:,1], (4, 1, 1))
         rl = tf.nn.conv1d(s1, k1l, stride=2, padding='VALID')
         rh = tf.nn.conv1d(s1, k1h, stride=2, padding='VALID')
-        s1 = tf.concat((rl, rh), axis=-1) # out: (b*c*ox, ny, 2)
-        s1 = tf.reshape(s1, [self.bs*self.cn, self.ox, self.ny, 2])
-        # out: (b*c, ox, ny, 2_y)
+        s1 = tf.concat((rl, rh), axis=-1) # out: (b, c*ox, ny, 2)
+        s1 = tf.reshape(s1, [self.bs, self.cn, self.ox, self.ny, 2])
+        # out: (b, c, ox, ny, 2_y)
         ## transform columns
-        t2 = tf.transpose(s1, perm=[0, 2, 3, 1]) # out: (b*c, ny, 2_y, ox)
+        t2 = tf.transpose(s1, perm=[0, 1, 3, 4, 2]) # out: (b, c, ny, 2_y, ox)
         if (mod_x == 0) :
             s2 = self.daub_0(t2)
         else :
             s2 = self.daub_1(t2)
-        ## s2: (b*c, ny, 2_y, 2*nx)
-        s2 = tf.reshape(s2, [self.bs*self.cn*self.ny*2, -1, 1])
-        # out: (b*c*ny*2_y, 2*nx', 1)
+        ## s2: (b, c, ny, 2_y, 2*nx)
+        nx_dim = s2.shape[4]
+        s2 = tf.reshape(s2, [self.bs, self.cn*self.ny*2, nx_dim, 1])
+        # out: (b, c*ny*2_y, 2*nx', 1)
         # build kernels and apply kernel to columns
         rl = tf.nn.conv1d(s2, k1l, stride=2, padding='VALID')
         rh = tf.nn.conv1d(s2, k1h, stride=2, padding='VALID')
-        r = tf.concat((rl, rh), axis=-1) # out: (b*c*ny*2_y, nx, 2_x)
+        r = tf.concat((rl, rh), axis=-1) # out: (b, c*ny*2_y, nx, 2_x)
         r = tf.reshape(r, [self.bs, self.cn, self.ny, 2, self.nx, 2])
         # out: (b, c, ny, 2_y, nx, 2_x)
         r = tf.transpose(r, perm=[0, 4, 2, 3, 5, 1]) # out: (b, nx, ny, 2_y, 2_x, c)
@@ -361,14 +362,14 @@ class InvDaubWaveLayer2D(InvWaveLayer2D):
         #######################################
         ## work on x
         #######################################
-        t1 = tf.reshape(t1, [self.bs*self.cn*self.oy, self.ox, 1])
-        # out: (b*c*oy, ox, 1)
+        t1 = tf.reshape(t1, [self.bs, self.cn*self.oy, self.ox, 1])
+        # out: (b, c*oy, ox, 1)
         # apply kernel to x
         k1l = tf.reshape(daubechies_ker[:,0], (4, 1, 1))
         k1h = tf.reshape(daubechies_ker[:,1], (4, 1, 1))
         rl = tf.nn.conv1d(t1, k1l, stride=2, padding='VALID')
         rh = tf.nn.conv1d(t1, k1h, stride=2, padding='VALID')
-        r1 = tf.concat((rl, rh), axis=-1) # out: (b*c*oy, qx', 4)
+        r1 = tf.concat((rl, rh), axis=-1) # out: (b, c*oy, qx', 4)
         r1 = tf.reshape(r1, [self.bs, self.cn, self.oy, self.ox-2])
         # out: (b*c, oy, ox-2)
         #######################################
@@ -393,15 +394,15 @@ class InvDaubWaveLayer2D(InvWaveLayer2D):
         #######################################
         ## work on y
         #######################################
-        s1 = tf.reshape(r, [self.bs*self.cn, self.oy, self.ox])
-        # out: (b*c, oy, ox)
-        s1 = tf.transpose(s1, perm=[0, 2, 1]) # out: (b*c, ox, oy)
-        s1 = tf.reshape(s1, [self.bs*self.cn*self.ox, self.oy, 1])
-        # out: (b*c*ox, oy, 1)
+        s1 = tf.reshape(r, [self.bs, self.cn, self.oy, self.ox])
+        # out: (b, c, oy, ox)
+        s1 = tf.transpose(s1, perm=[0, 1, 3, 2]) # out: (b, c, ox, oy)
+        s1 = tf.reshape(s1, [self.bs, self.cn*self.ox, self.oy, 1])
+        # out: (b, c*ox, oy, 1)
         # apply kernel to y
         rl = tf.nn.conv1d(s1, k1l, stride=2, padding='VALID')
         rh = tf.nn.conv1d(s1, k1h, stride=2, padding='VALID')
-        r1 = tf.concat((rl, rh), axis=-1) # out: (b*c*ox, qy', 4)
+        r1 = tf.concat((rl, rh), axis=-1) # out: (b, c*ox, qy', 4)
         r1 = tf.reshape(r1, [self.bs, self.cn, self.ox, self.oy-2])
         #######################################
         ## merge core and borders
