@@ -59,6 +59,20 @@ workshop](https://ailb-web.ing.unimore.it/cadl2020/) at [ICPR
 the CRS4 publications repository [(direct link to
 PDF)](http://publications.crs4.it/pubdocs/2021/Ver21/wavetf.pdf).
 
+### Citation
+
+```bibtex
+@InProceedings{wavetf,
+  author="Versaci, Francesco",
+  title="WaveTF: A Fast 2D Wavelet Transform for Machine Learning in Keras",
+  booktitle="Pattern Recognition. ICPR International Workshops and Challenges",
+  year="2021",
+  publisher="Springer International Publishing",
+  pages="605--618",
+  isbn="978-3-030-68763-2"
+}
+```
+
 ## Usage
 
 WaveTF directly exposes a single class, which is a factory for Keras
