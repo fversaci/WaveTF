@@ -213,7 +213,8 @@ class DaubWaveLayer2D(DirWaveLayer2D):
         else:
             s1 = self.daub_1(t1)
         ## s1: (b, c, ox, 2*ny)
-        s1 = tf.reshape(s1, [self.bs, self.cn*self.ox, -1, 1])
+        ny_dim = s1.shape[3]
+        s1 = tf.reshape(s1, [self.bs, self.cn*self.ox, ny_dim, 1])
         ## s1: (b, c*ox, 2*ny', 1)
         # build kernels and apply to rows
         k1l = tf.reshape(daubechies_ker[:,0], (4, 1, 1))
