@@ -61,7 +61,7 @@ class HaarWaveLayer1D(DirWaveLayer1D):
         else :
             s1 = self.haar_1(t1)
         ## s1: (b, c, 2*nx)
-        s1 = tf.reshape(s1, [self.bs*self.cn, 2*self.nx, 1]) # out: (b*c, 2*nx, 1)
+        s1 = tf.reshape(s1, [-1, 2*self.nx, 1]) # out: (b*c, 2*nx, 1)
         # build kernels and apply to rows
         k1l = tf.reshape(haar_ker[:,0], (2, 1, 1))
         k1h = tf.reshape(haar_ker[:,1], (2, 1, 1))
@@ -99,7 +99,7 @@ class InvHaarWaveLayer1D(InvWaveLayer1D):
         t1 = tf.reshape(input, [self.bs, self.ox, self.cn])
         # out: (b, ox, c)
         t1 = tf.transpose(t1, perm=[0, 2, 1]) # out: (b, c, ox)
-        t1 = tf.reshape(t1, [self.bs*self.cn, self.ox, 1]) # out: (b*c, ox, 1)
+        t1 = tf.reshape(t1, [-1, self.ox, 1]) # out: (b*c, ox, 1)
         # apply kernel to rows
         k1l = tf.reshape(haar_ker[:,0], (2, 1, 1))
         k1h = tf.reshape(haar_ker[:,1], (2, 1, 1))
@@ -159,7 +159,7 @@ class HaarWaveLayer2D(DirWaveLayer2D):
         else :
             s1 = self.haar_1(t1)
         ## s1: (b, c, ox, 2*ny)
-        s1 = tf.reshape(s1, [self.bs*self.cn*self.ox, 2*self.ny, 1])
+        s1 = tf.reshape(s1, [-1, 2*self.ny, 1])
         ## s1: (b*c*ox, 2*ny, 1)
         # build kernels and apply to rows
         k1l = tf.reshape(haar_ker[:,0], (2, 1, 1))
@@ -176,7 +176,7 @@ class HaarWaveLayer2D(DirWaveLayer2D):
         else :
             s2 = self.haar_1(t2)
         ## s2: (b, c, ny, 2_y, 2*nx)
-        s2 = tf.reshape(s2, [self.bs*self.cn*self.ny*2, 2*self.nx, 1])
+        s2 = tf.reshape(s2, [-1, 2*self.nx, 1])
         # out: (b*c*ny*2_y, 2*nx, 1)
         # build kernels and apply kernel to columns
         rl = tf.nn.conv1d(s2, k1l, stride=2, padding='VALID')
@@ -217,7 +217,7 @@ class InvHaarWaveLayer2D(InvWaveLayer2D):
         # out: (b, x, y, 2_y, 2_x, c)
         t1 = tf.transpose(t1, perm=[0, 5, 2, 3, 1, 4])
         # out: (b, c, y, 2_y, x, 2_x)
-        t1 = tf.reshape(t1, [self.bs*self.cn*self.oy, self.ox, 1])
+        t1 = tf.reshape(t1, [-1, self.ox, 1])
         # out: (b*c*oy, ox, 1)
         # apply kernel to x
         k1l = tf.reshape(haar_ker[:,0], (2, 1, 1))
@@ -228,7 +228,7 @@ class InvHaarWaveLayer2D(InvWaveLayer2D):
         s1 = tf.reshape(s1, [self.bs, self.cn, self.oy, self.ox])
         # out: (b, c, oy, ox)
         s1 = tf.transpose(s1, perm=[0, 1, 3, 2]) # out: (b, c, ox, oy)
-        s1 = tf.reshape(s1, [self.bs*self.cn*self.ox, self.oy, 1])
+        s1 = tf.reshape(s1, [-1, self.oy, 1])
         # out: (b*c*ox, oy, 1)
         # apply kernel to y
         rl = tf.nn.conv1d(s1, k1l, stride=2, padding='VALID')

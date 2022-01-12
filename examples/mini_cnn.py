@@ -77,4 +77,5 @@ def wavelet_cnn(input_shape, ks=3, baselev=4, wavelet=True,
     model = Model(inputs = inputs, outputs = outputs)
     return model
 
-
+#wavelet_cnn([128,128,3])
+#wavelet_cnn([128,128,3], wave_kern='haar')
