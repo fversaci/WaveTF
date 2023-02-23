@@ -74,8 +74,9 @@ for ker, tf_ker in km.items():
         maxd = abs(diff[:, bd:-bd]).max() # ignore border
         invd = abs((tfiw - ten).numpy()).max()
         mm = max(maxd, invd)
-        print(maxd, invd)
         if (mm>1e-5):
+            print(ker)
+            print(maxd, invd)
             errors = True
 
 if (errors):            
